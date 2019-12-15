@@ -12,11 +12,8 @@ with open(path, 'r', newline='') as file:
     i = j = 1
     for row in csvreader:
         print(i)
-        #print(f'i is {i}, j is {j}')
-        # 沒1000個就j加1， 然後就有一個新的文件名
         if i <= 5000:
             #j += 1
-            #print(f"csv {j} 生成成功")
             csv_path = os.path.join('/'.join(path.split('/')[:-1]), 'train_v2_split' + '.csv')
             # print('/'.join(path.split('/')[:-1]))
             #print(csv_path)
