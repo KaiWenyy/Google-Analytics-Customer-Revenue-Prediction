@@ -7,9 +7,10 @@ datascience final project
 	* Organic search
 	* Referral
 	* Direct
-	*  Paid search
+	* Paid search
 	* Display
 	* Affiliates
 	* Social
 ### Initial results
-* From the first 5000 samples, 4563 subjects have labels ('transactionRevenue'). And each subjects may appear more than once.
+* 5325 rows in df
+* 5015 unique visitors
