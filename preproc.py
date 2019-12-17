@@ -58,55 +58,6 @@ def load_data(pickle_path):
     df = pd.read_pickle(pickle_path)
     return df
 
-def get_one_feature(df, column="totals", subcolumn=None, to_float=False):
-    if subcolumn != None:
-        data = df[column]
-        container = []
-        for d in data:
-            container.append(d[subcolumn])
-    else:
-        container = df[column]
-    if to_float:
-        container = [float(n) for n in container]
-    container = np.array(container)
-    print(len(container), container[:3])
-    return container
-
-
-def get_hits_feature(df, subcolumn, to_float=False):
-    """Features in "hits":
-        'hitNumber', 'time', 'hour', 'minute', 'isInteraction', 'isEntrance', 'page', 'transaction', 
-        'item', 'appInfo', 'exceptionInfo', 'product', 'promotion', 'eCommerceAction', 'experiment', 
-        'customVariables', 'customDimensions', 'customMetrics', 'type', 'social', 'contentGroup', 
-        'dataSource', 'publisher_infos'
-    """
-    data = df["hits"]  
-    container = []
-    if to_float:
-        for d in data:  # "d" is a list containing several dicts without fixed length.
-            container.append([float(e[subcolumn]) for e in d])
-    else:
-        for d in data:
-            container.append([d[h][subcolumn] for h in len(d)])
-    print(container[:3])
-    container = pad_sequences(container, padding="pre", value=0.0, maxlen=30)  # TODO: improve.
-    print(subcolumn, container.shape, container[:3])
-    return container
-
-
-def get_target(df, allVisitorId):
-    target = {}
-    for visitor in allVisitorId:
-        target[visitor] = 0
-    for index in df.index:
-        visitor = df.at[index, "fullVisitorId"]
-        target[visitor] += float(df.at[index, "totals"]["transactionRevenue"])
-    for i, visitor in enumerate(allVisitorId):
-        target[visitor] = np.log(target[visitor] + 1)
-        if i < 3:
-            print("VisitorID = %d, target = %.2f" % (visitor, target[visitor]))
-    return target
-
 
 def main():
     #csv_paths = ['train_split/train_split' + str(j+1) + '.csv' for j in range(101)]
