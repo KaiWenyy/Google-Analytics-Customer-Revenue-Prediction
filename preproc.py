@@ -73,6 +73,27 @@ def get_one_feature(df, column="totals", subcolumn=None, to_float=False):
     return container
 
 
+def get_hits_feature(df, subcolumn, to_float=False):
+    """Features in "hits":
+        'hitNumber', 'time', 'hour', 'minute', 'isInteraction', 'isEntrance', 'page', 'transaction', 
+        'item', 'appInfo', 'exceptionInfo', 'product', 'promotion', 'eCommerceAction', 'experiment', 
+        'customVariables', 'customDimensions', 'customMetrics', 'type', 'social', 'contentGroup', 
+        'dataSource', 'publisher_infos'
+    """
+    data = df["hits"]  
+    container = []
+    if to_float:
+        for d in data:  # "d" is a list containing several dicts without fixed length.
+            container.append([float(e[subcolumn]) for e in d])
+    else:
+        for d in data:
+            container.append([d[h][subcolumn] for h in len(d)])
+    print(container[:3])
+    container = pad_sequences(container, padding="pre", value=0.0, maxlen=30)  # TODO: improve.
+    print(subcolumn, container.shape, container[:3])
+    return container
+
+
 def get_target(df, allVisitorId):
     target = {}
     for visitor in allVisitorId:
