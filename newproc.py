@@ -24,20 +24,45 @@ def load_other_df(filename):
     print("load file " + filename + '...')
     df = pd.read_csv(filename,
         dtype = {'fullVisitorId': 'str', 'visitId': 'str', 
-                "totals.transactionRevenue": 'float'}
+                "totals.transactionRevenue": 'float',
+                'ind': 'float'}
         )
     return df
+
 def load_hits_df(filename):
     print("load file " + filename + '...')
     df = pd.read_csv(filename,
         dtype = {'ind': 'float'}
         )
     return df
+'''
+def load_other_df(filename, isTrain = True):
+    print("load file " + filename + '...')
+    df = pd.read_csv(filename,
+        dtype = {'fullVisitorId': 'str', 'visitId': 'str', 
+                "totals.transactionRevenue": 'float'}
+        )
+    if isTrain:
+        df = bug_train_other_fix(df)
+    else:
+        df = bug_test_other_fix(df)
+    return df
 
+def load_hits_df(filename, isTrain = True):
+    print("load file " + filename + '...')
+    df = pd.read_csv(filename,
+        dtype = {'ind': 'float'}
+        )
+    if isTrain:
+        df = bug_train_hit_fix(df)
+    else:
+        df = bug_test_hit_fix(df)
+    return df
+'''
 #============================================
 # for hits df 
 #============================================
-def load_df2(csv_name, nrows = None, isTrain = True, selectID = None, numFile =0):
+def load_df2(csv_name, nrows = None, isTrain = True, selectID = None, pre_nrows =0):
     "csv_path：檔案路徑， nrows 讀取行數，JSON_COLUMNS: JSON的列"
 
     df = pd.read_csv(csv_name,
@@ -49,6 +74,8 @@ def load_df2(csv_name, nrows = None, isTrain = True, selectID = None, numFile =0
     for column in JSON_COLUMNS + NEW_COLUMNS + SIMPLE_COLUMNS:
         df.drop(column, axis = 1, inplace = True)
 
+
+    print('nrows:', len(df.index))
     if isTrain == False:
         '''
         repeatId, n,m = get_repeatID()
@@ -57,10 +84,14 @@ def load_df2(csv_name, nrows = None, isTrain = True, selectID = None, numFile =0
                 df.drop([index], inplace = True)
         df.reset_index()
         '''
-        s = [i - (numFile*5000) for i in selectID if i >= (numFile*5000) and i < ((numFile+1)*5000)]
-        print('selected rows: ', len(s))
-        df = df.iloc[s]
+        #s = [i - (numFile*5000) for i in selectID if i >= pre_nrows and i < ((numFile+1)*5000)]
+        s = [i - pre_nrows for i in selectID if i >= pre_nrows and i < pre_nrows+len(df.index)]
+        ss = [i for i in selectID if i >= pre_nrows and i < pre_nrows+len(df.index)]
 
+        print('selected rows: ', len(s))
+        pre_nrows += len(df.index)
+        df = df.iloc[s]
+        
 
     col = 'hits'
     df[col][df[col] == "[]"] = "[{}]"
@@ -123,7 +154,7 @@ def load_df2(csv_name, nrows = None, isTrain = True, selectID = None, numFile =0
     #print(hit_df.columns)
     #print(len(hit_df.columns))
     hit_df.to_csv('hit_exjson_' + csv_name.split('.')[0] + '.csv', index = False)
-    return hit_df, len(s)
+    return hit_df, ss, pre_nrows
 
 #============================================
 # for others df
@@ -156,17 +187,21 @@ def load_df(csv_name, nrows = None):
 
 def exjson(path, num, isTrain= True, selectID = None):   
     #os.chdir(path)
-    files = [ os.path.join(path, 'test_split') + str(d+242) + '.csv' for d in range(num)]
+    files = [ os.path.join(path, 'test_split') + str(d+1) + '.csv' for d in range(num)]
 
     n = 0
-    t_len = 0
+    t_len = []
     for i in files:
         #load_df(i)
-        tmp, s = load_df2(i, isTrain = isTrain, selectID = selectID, numFile =n )
+        tmp, s, pre_r = load_df2(i, isTrain = isTrain, selectID = selectID, pre_nrows = n)
         print('No. {} is done.'.format(i.split('.')[0]))
-        n+=1
-        t_len += s
-    assert t_len == len(selectID)
+        n = pre_r
+        print(n)
+        t_len.extend(s)
+    #assert n == 401585
+    print(list(set(t_len) - set(selectID)))
+    print(list(set(selectID) - set(t_len)))
+    assert t_len == selectID
 
 #============================================
 # concat functions
@@ -189,7 +224,7 @@ def concat_df(path, num, outname = None):
 def concat_df_hit(path, num, outname = None):
     "path: path_train/path_test; num: 86/21"
     os.chdir(path)
-    file_list = ['train_split{}.csv'.format(i+242) for i in range(num)]
+    file_list = ['test_split{}.csv'.format(i+1) for i in range(num)]
     df_list = []
     
     pre_len = 0
@@ -212,30 +247,36 @@ def concat_df_hit(path, num, outname = None):
 # with the same ID in train data
 #============================================
 def get_repeatID():
-    train = load_dataFrame('exjson_train_split2/train_df.csv')
-    test = load_dataFrame('exjson_test_split/test_df.csv')
+    train = load_other_df('exjson_train_split2/train_df.csv')
+    test = load_other_df('exjson_test_split/test_df.csv', False)
     repeatId = intersection(train['fullVisitorId'].unique(), test['fullVisitorId'].unique())
 
     return repeatId, train, test
 
 def get_test_no_hit():
     repeatId, train, test = get_repeatID()
-    selectID = []
+    print('==========================')
+    print('test len:', len(test.index))
+    print('==========================')
+
     col = 'fullVisitorId'
     selectID = []
     df_list = []
     n = 1
     for i in repeatId :
-        print(n,'/',len(repeatId))
+        #print(n,'/',len(repeatId))
         ind_list = test[col][ test[col] == i].index
         #print(list(ind))
         selectID.extend(list(ind_list))
         n+= 1
     selectID = sorted(selectID)
+    print('len of selectID: ',len(selectID))
     test = test.iloc[selectID]
-    df_list.append(test)
-    test = pd.concat(df_list, ignore_index = True)
-    test.to_csv('exjson_test_split/test_selecet_df.csv', index = False)
+    test.reset_index(drop = True, inplace = True)
+    print('len of selected test: ', len(test.index))
+    #df_list.append(test)
+    #test = pd.concat(df_list, ignore_index = True)
+    test.to_csv('exjson_test_split/test_select_df.csv', index = False)
 
     return test, selectID
 
@@ -256,13 +297,64 @@ def bug_fix(df):
     df = df.drop(drop_list)
     return df
 
-def bug_hit_fix(df):
+def bug_train_other_fix(df):
+    empty_row = []
+    with open('hits_empty_row_ind.txt','r') as fp:
+     all_lines = fp.readlines()
+     for l in all_lines:
+        empty_row.append( int(l.split()[0]) )
+    fp.close()
+    add_ind = [i for i in df.index]
+    df['ind'] = add_ind
+    df.drop(empty_row, inplace = True)
+    df.reset_index(drop=True, inplace= True)
+    return df
+
+def bug_test_other_fix(df):
+    #25098    4249.0
+    add_ind = [i for i in df.index]
+    df['ind'] = add_ind
+    df.drop([4249], inplace = True)
+    df.reset_index(drop=True, inplace= True)
+    return df
+
+def bug_train_hit_fix(df):
+    #drop the row whose 'ind' is nan
     nan = df['ind'][ df['ind'].isnull()].index
     df.drop( nan, inplace = True)
+    # drop the row whose hits is empty
+    empty_row = []
+    with open('hits_empty_row_ind.txt','r') as fp:
+     all_lines = fp.readlines()
+     for l in all_lines:
+        ind = df['ind'][ df['ind'] == int(l.split()[0]) ].index
+        #print(ind, df['ind'][ind[0]])
+        empty_row.extend(ind)
+    fp.close()
+    df.drop(empty_row, inplace = True)
+    df.reset_index(drop=True, inplace= True)
+    return df
+
+def bug_test_hit_fix(df):
+    # drop the row whose hits is empty
+    # 25098    4249.0
+    df.drop([25098], inplace = True)
+    df.reset_index(drop=True, inplace= True)
     return df
 
 def main():
     # train hit
-    exjson('train_split2', 1, isTrain = True)
-    df = concat_df_hit('hit_exjson_train_split2', 101, 'train_df.csv')
+    #exjson('test_split', 81, isTrain = False)
+    #df = concat_df_hit('hit_exjson_train_split2', 101, 'train_df.csv')
     #print(df['ind'][12823:12835])
+
+    test, selectID = get_test_no_hit()
+    #print(len(test.index))
+    #print(len(test['fullVisitorId'].unique()))
+    #print(selectID)
+
+    # test hit
+    exjson('test_split', 81, isTrain = False, selectID = selectID)
+    df = concat_df_hit('hit_exjson_test_split', 81, 'test_select_df.csv')
+    #print(df['ind'])
+#main()
