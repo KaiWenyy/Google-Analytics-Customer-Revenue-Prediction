@@ -1,4 +1,4 @@
-from newproc import load_other_df, load_hits_df, bug_hit_fix
+from newproc import load_other_df, load_hits_df, intersection#, bug_hit_fix, bug_other_fix
 
 '''
 OTHERS COLUMNS
@@ -28,7 +28,7 @@ OTHERS COLUMNS
        'trafficSource.campaignCode', 'trafficSource.isTrueDirect',
        'trafficSource.keyword', 'trafficSource.medium',
        'trafficSource.referralPath', 'trafficSource.source', 'visitId',
-       'visitNumber', 'visitStartTime']
+       'visitNumber', 'visitStartTime','ind']
 
 HITS COLUMNS
        ['hits.appInfo.exitScreenName', 'hits.appInfo.landingScreenName',
@@ -69,34 +69,35 @@ HITS COLUMNS
 
 '''
 
+
 #train
-train_df = load_other_df('test_train/others/train_df.csv')
+train_df = load_other_df('test_train/others/train_df2.csv')
 nrows = len(train_df.index)
 print(nrows)
-print(train_df['totals.transactionRevenue'].count())
+#print(train_df['totals.transactionRevenue'].count())
 
-train_hit_df = load_hits_df('test_train/hits/train_df.csv')
-train_hit_df = bug_hit_fix(train_hit_df)  # drop the row which colun 'ind' = nan
-print(train_hit_df.columns)
+train_hit_df = load_hits_df('test_train/hits/train_df2.csv')
 print(len(train_hit_df.index))
 hit_nrows = len(train_hit_df['ind'].unique())
 print( hit_nrows )
-#51579 1 5
+
 assert hit_nrows == nrows
 
 
 #test
-test_df = load_other_df('test_train/others/test_select_df.csv')
-nrows = len(test_df.index)
+test_df = load_other_df('test_train/others/test_select_df2.csv')
+nrows = len(test_df['ind'].unique())
 print(nrows)
-print(test_df['totals.transactionRevenue'].count())
+#print(test_df['totals.transactionRevenue'].count())
 
-test_hit_df = load_hits_df('test_train/hits/test_select_df.csv')
+test_hit_df = load_hits_df('test_train/hits/test_select_df2.csv')
 print(len(test_hit_df.index))
 hit_nrows = len(test_hit_df['ind'].unique())
 print( hit_nrows )
 
 assert hit_nrows == nrows
+
+
 
 
 
