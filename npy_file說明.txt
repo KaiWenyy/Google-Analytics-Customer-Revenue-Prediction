@@ -1,0 +1,36 @@
+cat_cols_need_emb = ['channelGrouping', 'customDimensions.value',
+                     'device.browser', 'device.deviceCategory',
+                     'device.operatingSystem', 'geoNetwork.continent',
+                     'geoNetwork.subContinent', 'trafficSource.adwordsClickInfo.adNetworkType',
+                     'trafficSource.adwordsClickInfo.slot',
+                     'trafficSource.campaign', 'trafficSource.medium',
+                     'new_date'] 需要自己做embedding的， one-hot
+
+cat_cols_noneed_emb = ['customDimensions.index', 'device.isMobile',
+                       'totals.bounces', 'totals.newVisits',
+                       'trafficSource.adwordsClickInfo.isVideoAd',
+                       'trafficSource.isTrueDirect'] 已經轉成0 1，故不用再額外處理
+
+cat_cols_need_outeremb = ['geoNetwork.city', 'geoNetwork.country',
+                          'geoNetwork.metro', 'geoNetwork.region',
+                          'trafficSource.adContent', 'trafficSource.source'] 需要外在model幫忙embedding
+
+num_col = ['totals.hits', 'totals.pageviews', 'totals.timeOnSite',
+           'totals.transactions', 'trafficSource.adwordsClickInfo.page',
+           'visitNumber', 'visitStartTime', 'section_num']  數值資料
+
+all_select = ['channelGrouping', 'customDimensions.index',
+              'customDimensions.value', 'device.browser',
+              'device.deviceCategory', 'device.isMobile',
+              'device.operatingSystem', 'geoNetwork.city',
+              'geoNetwork.continent', 'geoNetwork.country',
+              'geoNetwork.metro', 'geoNetwork.region',
+              'geoNetwork.subContinent', 'totals.bounces',
+              'totals.hits', 'totals.newVisits', 'totals.pageviews',
+              'totals.timeOnSite', 'totals.transactions',
+              'trafficSource.adContent', 'trafficSource.adwordsClickInfo.adNetworkType',
+              'trafficSource.adwordsClickInfo.isVideoAd',
+              'trafficSource.adwordsClickInfo.page',
+              'trafficSource.adwordsClickInfo.slot', 'trafficSource.campaign',
+              'trafficSource.isTrueDirect', 'trafficSource.medium', 'trafficSource.source',
+              'visitNumber', 'visitStartTime', 'new_date', 'section_num'] 所有選擇的欄位
