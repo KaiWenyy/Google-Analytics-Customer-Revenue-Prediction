@@ -19,25 +19,33 @@ def np_array_to_df(array):
 	return df
 
 def produce_submission(pred_df, sample_df):  # assume predict dataframe : fullVisitorId, revenue
-	#pred_df[pred_df<0] = 0
-	#pred_df["PredictedLogRevenue"] = np.expm1(pred_df)
-	pred_df = pred_df.groupby("fullVisitorId")["PredictedLogRevenue"].sum().reset_index()
-	pred_df["PredictedLogRevenue"] = np.log1p(pred_df["PredictedLogRevenue"])
+	#pred_test[pred_test<0] = 0
+	#df["PredictedLogRevenue"] = np.expm1(pred_test)
+	diff = match(sample_df, pred_df)
+	for i in diff:
+		insert = pd.DataFrame([[i,0]], columns=['fullVisitorId','PredictedLogRevenue'])
+		pred_df = pred_df.append(insert,ignore_index=True)
+	pred_df = pred_df.groupby("fullVisitorId")['PredictedLogRevenue'].sum().reset_index()
+	pred_df = pred_df.sort_values(by="fullVisitorId", ascending=True)
+	pred_df['PredictedLogRevenue'] = np.log1p(pred_df['PredictedLogRevenue'])
+	'''
 	for i in pred_df.index:
 		ind = sample_df['fullVisitorId'][ sample_df['fullVisitorId']==pred_df['fullVisitorId'][i] ].index
 		sample_df['PredictedLogRevenue'][ind] = pred_df['PredictedLogRevenue'][i]
-	sample_df.to_csv("baseline.csv", index=False)
+	'''
+
+	#sample_df.to_csv("baseline.csv", index=False)
+	pred_df.to_csv("baseline.csv", index=False)
 
 def match(sample_df, pred_df):
 	diff1 = list( set(sample_df['fullVisitorId']) - set(pred_df['fullVisitorId'].unique()) )
-	diff2 = list( set(pred_df['fullVisitorId'].unique()) - set(sample_df['fullVisitorId']) )
-
-	print(diff1)
-	print(diff2) 
+	#diff2 = list( set(pred_df['fullVisitorId'].unique()) - set(sample_df['fullVisitorId']) )
+	return diff1 
 
 
 if __name__ == '__main__':
 	#test = load_other_df('test/others/test_df2.csv')
 	sample = load_submission('sample_submission_v2.csv')
 	pred = np_array_to_df(array)
+	#match(sample, test)
 	produce_submission(pred, sample)
