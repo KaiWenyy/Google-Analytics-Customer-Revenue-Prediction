@@ -19,11 +19,9 @@ def np_array_to_df(array):
 	return df
 
 def produce_submission(pred_df, sample_df):  # assume predict dataframe : fullVisitorId, revenue
-	#sub_df = pd.DataFrame({"fullVisitorId":test_id})
-	#pred_test[pred_test<0] = 0
-	#df["PredictedLogRevenue"] = np.expm1(pred_test)
+	#pred_df[pred_df<0] = 0
+	#pred_df["PredictedLogRevenue"] = np.expm1(pred_df)
 	pred_df = pred_df.groupby("fullVisitorId")["PredictedLogRevenue"].sum().reset_index()
-	#df.columns = ["fullVisitorId", "PredictedLogRevenue"]
 	pred_df["PredictedLogRevenue"] = np.log1p(pred_df["PredictedLogRevenue"])
 	for i in pred_df.index:
 		ind = sample_df['fullVisitorId'][ sample_df['fullVisitorId']==pred_df['fullVisitorId'][i] ].index
@@ -42,5 +40,4 @@ if __name__ == '__main__':
 	#test = load_other_df('test/others/test_df2.csv')
 	sample = load_submission('sample_submission_v2.csv')
 	pred = np_array_to_df(array)
-	#match(sample, test)
 	produce_submission(pred, sample)
