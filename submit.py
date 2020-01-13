@@ -13,15 +13,18 @@ def load_submission(csv_name, nrows=None):
 def read_npy(filename):
 	return df
 
-def np_array_to_df(array):
-	df = pd.DataFrame(data=array, #[1:,1:],    # values  index=array[1:,0],    # 1st column as index              	 
+def np_array_to_df(array,test_df):
+	a = np.c_[test['fullVisitorId'].values, array]
+	print(a.shape)
+	df = pd.DataFrame(data=a, #[1:,1:],    # values  index=array[1:,0],    # 1st column as index              	 
               	 columns=['fullVisitorId','PredictedLogRevenue'])
 	return df
 
-def produce_submission(pred_df, sample_df):  # assume predict dataframe : fullVisitorId, revenue
+def produce_submission(pred_df, sample_df, filename):  # assume predict dataframe : fullVisitorId, revenue
 	#pred_test[pred_test<0] = 0
 	#df["PredictedLogRevenue"] = np.expm1(pred_test)
 	diff = match(sample_df, pred_df)
+	print(len(diff))
 	for i in diff:
 		insert = pd.DataFrame([[i,0]], columns=['fullVisitorId','PredictedLogRevenue'])
 		pred_df = pred_df.append(insert,ignore_index=True)
@@ -35,7 +38,7 @@ def produce_submission(pred_df, sample_df):  # assume predict dataframe : fullVi
 	'''
 
 	#sample_df.to_csv("baseline.csv", index=False)
-	pred_df.to_csv("baseline.csv", index=False)
+	pred_df.to_csv(filename, index=False)
 
 def match(sample_df, pred_df):
 	diff1 = list( set(sample_df['fullVisitorId']) - set(pred_df['fullVisitorId'].unique()) )
@@ -44,8 +47,23 @@ def match(sample_df, pred_df):
 
 
 if __name__ == '__main__':
-	#test = load_other_df('test/others/test_df2.csv')
+	test = load_other_df('test/others/test_df2.csv')
 	sample = load_submission('sample_submission_v2.csv')
-	pred = np_array_to_df(array)
-	#match(sample, test)
-	produce_submission(pred, sample)
+	# one npy file
+	npy = npyfilename # TODO
+	filename = npy.split('.')[0] + "_baseline.csv"
+	array = np.load(npy)
+	pred = np_array_to_df(array[:,1], test)
+	produce_submission(pred, sample, filename)
+
+	'''
+	# for many npy files
+	files = ['result_full_data_model.npy', 'result_only_basic_data.npy', 'result_only_second_model.npy', 'result_only_ts_data.npy']
+	for f in files:
+		npy = 'results/'+ f
+		filename = npy.split('.')[0] + "_baseline.csv"
+		array = np.load(npy)
+		pred = np_array_to_df(array[:,1], test)
+		#match(sample, test)
+		produce_submission(pred, sample, filename)
+	'''
