@@ -16,6 +16,7 @@ def read_npy(filename):
 def np_array_to_df(array,test_df):
 	a = np.c_[test['fullVisitorId'].values, array]
 	print(a.shape)
+	#print('array type:', type(array[0]), type(array[1]))
 	df = pd.DataFrame(data=a, #[1:,1:],    # values  index=array[1:,0],    # 1st column as index              	 
               	 columns=['fullVisitorId','PredictedLogRevenue'])
 	return df
@@ -50,10 +51,10 @@ if __name__ == '__main__':
 	test = load_other_df('test/others/test_df2.csv')
 	sample = load_submission('sample_submission_v2.csv')
 	# one npy file
-	npy = npyfilename # TODO
+	npy = 'ans.npy'
 	filename = npy.split('.')[0] + "_baseline.csv"
 	array = np.load(npy)
-	pred = np_array_to_df(array[:,1], test)
+	pred = np_array_to_df(array[:,1].astype('float64'), test)
 	produce_submission(pred, sample, filename)
 
 	'''
